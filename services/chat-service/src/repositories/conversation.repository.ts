@@ -51,7 +51,7 @@ export const conversationRepository = {
     const db = client.db();
     const doc = await db
       .collection(CONVERSATIONS_COLLECTION)
-      .findOne({ _id: id as unknown as ObjectId });
+      .findOne({ _id: id });
     return doc ? toConversation(doc) : null;
   },
 
@@ -70,7 +70,7 @@ export const conversationRepository = {
     const client = await getMongoClient();
     const db = client.db();
     await db.collection(CONVERSATIONS_COLLECTION).updateOne(
-      { _id: conversationId as unknown as ObjectId },
+      { _id: conversationId },
       {
         $set: {
           lastMessageAt: new Date(),

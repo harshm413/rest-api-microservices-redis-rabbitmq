@@ -1,5 +1,5 @@
 {
-  "name": "@chatapp/user-service",
+  "name": "@rest-api/user-service",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -20,7 +20,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.14.0",
   "dependencies": {
-    "@chatapp/common": "workspace:^",
+    "@rest-api/common": "workspace:^",
     "amqplib": "^0.10.9",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",

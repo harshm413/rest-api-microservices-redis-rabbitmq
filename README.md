@@ -1,6 +1,6 @@
-# ChatApp
+# REST API Microservices with Redis & RabbitMQ
 
-A production-ready, microservices-based real-time chat application built with TypeScript and Node.js. This project implements an API Gateway pattern with event-driven architecture, featuring JWT authentication, multi-database persistence, and Redis caching.
+A production-ready, microservices-based REST API application built with TypeScript and Node.js. This project implements an API Gateway pattern with event-driven architecture, featuring JWT authentication, multi-database persistence, and Redis caching.
 
 ## Table of Contents
 
@@ -95,8 +95,8 @@ Handles real-time messaging features:
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/fiston-user/chatapp-yt.git
-cd chatapp-yt
+git clone https://github.com/your-username/rest-api-microservices-redis-rabbitmq.git
+cd rest-api-microservices-redis-rabbitmq
 ```
 
 ### 2. Install dependencies
@@ -124,7 +124,7 @@ docker compose up -d rabbitmq redis mongo user-db auth-db
 ### 5. Build the common package
 
 ```bash
-pnpm --filter @chatapp/common build
+pnpm --filter @rest-api/common build
 ```
 
 ### 6. Start all services (development)
@@ -137,8 +137,8 @@ Or start individual services:
 
 ```bash
 pnpm --filter gateway-service dev
-pnpm --filter @chatapp/auth-service dev
-pnpm --filter @chatapp/user-service dev
+pnpm --filter @rest-api/auth-service dev
+pnpm --filter @rest-api/user-service dev
 pnpm --filter chat-service dev
 ```
 

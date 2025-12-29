@@ -1,5 +1,5 @@
 {
-  "name": "@chatapp/auth-service",
+  "name": "@rest-api/auth-service",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -20,7 +20,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.14.0",
   "dependencies": {
-    "@chatapp/common": "workspace:^",
+    "@rest-api/common": "workspace:^",
     "@types/cors": "^2.8.19",
     "amqplib": "^0.10.9",
     "bcrypt": "^6.0.0",

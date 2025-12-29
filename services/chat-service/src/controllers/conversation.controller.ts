@@ -33,13 +33,8 @@ export const createConversationHandler: RequestHandler = asyncHandler(async (req
 
 export const listConversationHandler: RequestHandler = asyncHandler(async (req, res) => {
   const user = getAuthenticatedUser(req);
-  const filter = listConversationsQuerySchema.parse(req.query);
-  if (filter.participantId && filter.participantId !== user.id) {
-    throw new HttpError(403, 'Unauthorized');
-  }
-
   const conversations = await conversationService.listConversation({ participantId: user.id });
-  res.status(201).json({ data: conversations });
+  res.json({ data: conversations });
 });
 
 export const getConversationHandler: RequestHandler = asyncHandler(async (req, res) => {
@@ -51,7 +46,7 @@ export const getConversationHandler: RequestHandler = asyncHandler(async (req, r
     throw new HttpError(403, 'Unauthorized');
   }
 
-  res.status(201).json({ data: conversation });
+  res.json({ data: conversation });
 });
 
 export const createMessageHandler: RequestHandler = asyncHandler(async (req, res) => {

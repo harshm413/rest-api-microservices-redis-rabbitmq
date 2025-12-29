@@ -1,3 +1,6 @@
+# Frontend (separate repo)
+frontend/
+
 # Dependencies
 node_modules/
 .pnpm-store/

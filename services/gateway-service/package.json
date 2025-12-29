@@ -20,7 +20,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.14.0",
   "dependencies": {
-    "@chatapp/common": "workspace:^",
+    "@rest-api/common": "workspace:^",
     "axios": "^1.13.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",

@@ -1,5 +1,5 @@
 {
-  "name": "chatapp",
+  "name": "rest-api-microservices-redis-rabbitmq",
   "version": "1.0.0",
   "privayte": true,
   "description": "",

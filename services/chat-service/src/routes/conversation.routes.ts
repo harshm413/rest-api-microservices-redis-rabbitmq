@@ -26,7 +26,6 @@ conversationRouter.post(
 );
 conversationRouter.get(
   '/',
-  validateRequest({ query: listConversationsQuerySchema }),
   listConversationHandler,
 );
 conversationRouter.get(
@@ -43,6 +42,6 @@ conversationRouter.post(
 
 conversationRouter.get(
   '/:id/messages',
-  validateRequest({ params: conversationIdParamsSchema, query: listMessagesQuerySchema }),
+  validateRequest({ params: conversationIdParamsSchema }),
   listMessageHandler,
 );
