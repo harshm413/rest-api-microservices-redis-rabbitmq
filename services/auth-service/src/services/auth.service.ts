@@ -8,7 +8,7 @@ import {
   verifyPassword,
   verifyRefreshToken,
 } from '@/utils/token';
-import { HttpError } from '@chatapp/common';
+import { HttpError } from '@rest-api/common';
 import { Op, Transaction } from 'sequelize';
 import crypto from 'crypto';
 import { publishUserRegistered } from '@/messaging/event-publishing';

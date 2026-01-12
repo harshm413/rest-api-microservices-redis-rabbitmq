@@ -2,7 +2,7 @@ import {
   AUTH_EVENT_EXCHANGE,
   AUTH_USER_REGISTERED_ROUTING_KEY,
   type AuthRegisteredEvent,
-} from '@chatapp/common';
+} from '@rest-api/common';
 
 import {
   connect,

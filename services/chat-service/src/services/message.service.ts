@@ -7,7 +7,7 @@ import type {
 
 import { messageRepository } from '@/repositories/message.repository';
 import { conversationService } from '@/services/conversation.service';
-import { HttpError } from '@chatapp/common';
+import { HttpError } from '@rest-api/common';
 
 export const messageService = {
   async createMessage(conversationId: string, senderId: string, body: string): Promise<Message> {

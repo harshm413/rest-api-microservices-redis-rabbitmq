@@ -12,7 +12,7 @@ import {
 } from '@/validation/conversation.schema';
 import { createMessageBodySchema, listMessagesQuerySchema } from '@/validation/message.schema';
 import { conversationIdParamsSchema } from '@/validation/shared.schema';
-import { validateRequest } from '@chatapp/common';
+import { validateRequest } from '@rest-api/common';
 import { Router } from 'express';
 
 export const conversationRouter: Router = Router();

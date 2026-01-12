@@ -2,7 +2,7 @@ import express, { type Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { errorHandler } from '@/middleware/error-handler';
-import { createInternalAuthMiddleware } from '@chatapp/common';
+import { createInternalAuthMiddleware } from '@rest-api/common';
 import { env } from './config/env';
 import { registerRoutes } from './routes';
 

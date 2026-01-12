@@ -4,7 +4,7 @@ import path from 'path';
 // Load .env from project root
 dotenv.config({ path: path.resolve(process.cwd(), '../../.env') });
 
-import { createEnv, z } from '@chatapp/common';
+import { createEnv, z } from '@rest-api/common';
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),

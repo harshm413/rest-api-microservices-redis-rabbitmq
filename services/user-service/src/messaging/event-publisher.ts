@@ -1,7 +1,7 @@
-import { USER_CREATED_ROUTING_KEY, USER_EVENTS_EXCHANGE } from '@chatapp/common';
+import { USER_CREATED_ROUTING_KEY, USER_EVENTS_EXCHANGE } from '@rest-api/common';
 import amqplib from 'amqplib';
 
-import type { UserCreatedEvent, UserCreatedPayload } from '@chatapp/common';
+import type { UserCreatedEvent, UserCreatedPayload } from '@rest-api/common';
 import type { Channel, ChannelModel, Connection } from 'amqplib';
 
 import { env } from '@/config/env';

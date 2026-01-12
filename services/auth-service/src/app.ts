@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { errorHandler } from '@/middleware/error-handler';
 import { registerRoutes } from '@/routes';
-import { createInternalAuthMiddleware } from '@chatapp/common';
+import { createInternalAuthMiddleware } from '@rest-api/common';
 import { env } from './config/env';
 
 export const createApp = (): Application => {

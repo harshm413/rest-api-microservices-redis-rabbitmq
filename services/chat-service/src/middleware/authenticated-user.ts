@@ -1,4 +1,4 @@
-import { HttpError, USER_ID_HEADER, z } from '@chatapp/common';
+import { HttpError, USER_ID_HEADER, z } from '@rest-api/common';
 import type { RequestHandler } from 'express';
 
 const userIdSchema = z.string().uuid();

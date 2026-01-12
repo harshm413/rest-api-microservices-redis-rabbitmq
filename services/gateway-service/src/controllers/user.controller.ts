@@ -6,7 +6,7 @@ import {
   searchUsersQuerySchema,
   userIdParamsSchema,
 } from '@/validation/user.schema';
-import { AsyncHandler } from '@chatapp/common';
+import { AsyncHandler } from '@rest-api/common';
 
 export const getUser: AsyncHandler = async (req, res, next) => {
   try {

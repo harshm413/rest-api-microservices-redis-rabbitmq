@@ -7,7 +7,7 @@ import {
   listConversationsQuerySchema,
   conversationIdParamsSchema,
 } from '@/validation/conversation.schema';
-import { asyncHandler, HttpError } from '@chatapp/common';
+import { asyncHandler, HttpError } from '@rest-api/common';
 import { createMessageBodySchema, listMessagesQuerySchema } from '@/validation/message.schema';
 
 export const createConversationHandler: RequestHandler = asyncHandler(async (req, res) => {

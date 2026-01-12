@@ -1,4 +1,4 @@
-import { HttpError } from '@chatapp/common';
+import { HttpError } from '@rest-api/common';
 
 import type { ErrorRequestHandler } from 'express';
 import { logger } from '@/utils/logger';

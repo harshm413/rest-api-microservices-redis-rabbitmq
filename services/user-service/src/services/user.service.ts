@@ -3,7 +3,7 @@ import type { CreateUserInput, User } from '@/types/user';
 
 import { sequelize } from '@/db';
 import { userRepository } from '@/repositories/user.repositories';
-import { AuthUserRegisteredPayload, HttpError } from '@chatapp/common';
+import { AuthUserRegisteredPayload, HttpError } from '@rest-api/common';
 import { UniqueConstraintError } from 'sequelize';
 import { publishUserCreatedEvent } from '@/messaging/event-publisher';
 

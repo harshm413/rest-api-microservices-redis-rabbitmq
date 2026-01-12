@@ -5,7 +5,7 @@ import {
   revokeTokens,
 } from '@/controllers/auth.controller';
 import { loginSchema, refreshSchema, registerSchema, revokeSchema } from '@/validation/auth.schema';
-import { asyncHandler, validateRequest } from '@chatapp/common';
+import { asyncHandler, validateRequest } from '@rest-api/common';
 
 import { Router } from 'express';
 

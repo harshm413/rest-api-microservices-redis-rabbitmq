@@ -1,4 +1,4 @@
-import { HttpError, type AuthenticatedUser } from '@chatapp/common';
+import { HttpError, type AuthenticatedUser } from '@rest-api/common';
 
 import type { Request } from 'express';
 

@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat-service
+  namespace: dev
+  labels:
+    app: chat-service
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chat-service
+  template:
+    metadata:
+      labels:
+        app: chat-service
+        tier: backend
+    spec:
+      containers:
+      - name: chat-service
+        image: microservices/chat:dev
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 4002
+        envFrom:
+        - configMapRef:
+            name: dev-config
+        - secretRef:
+            name: dev-secrets
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 4002
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 4002
+          initialDelaySeconds: 30
+          periodSeconds: 5

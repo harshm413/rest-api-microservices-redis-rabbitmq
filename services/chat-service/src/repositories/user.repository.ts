@@ -1,4 +1,4 @@
-import type { UserCreatedPayload } from '@chatapp/common';
+import type { UserCreatedPayload } from '@rest-api/common';
 import type { Collection } from 'mongodb';
 
 import { getMongoClient } from '@/clients/mongo.client';

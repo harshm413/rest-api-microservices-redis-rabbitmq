@@ -5,7 +5,7 @@ import {
   USER_CREATED_ROUTING_KEY,
   USER_EVENTS_EXCHANGE,
   type UserCreatedEvent,
-} from '@chatapp/common';
+} from '@rest-api/common';
 
 import {
   connect,

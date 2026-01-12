@@ -1,6 +1,6 @@
 import { authProxyService } from '@/services/auth-proxy.service';
 import { loginSchema, refreshSchema, registerSchema, revokeSchema } from '@/validation/auth.schema';
-import { AsyncHandler } from '@chatapp/common';
+import { AsyncHandler } from '@rest-api/common';
 
 export const registerUser: AsyncHandler = async (req, res, next) => {
   try {

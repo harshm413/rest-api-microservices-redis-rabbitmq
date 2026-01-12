@@ -1,6 +1,6 @@
 import { userService } from '@/services/user.service';
 import { CreateUserBody, SearchUsersQuery, UserIdParams } from '@/validation/user.schema';
-import type { AsyncHandler } from '@chatapp/common';
+import type { AsyncHandler } from '@rest-api/common';
 
 export const getUser: AsyncHandler = async (req, res, next) => {
   try {

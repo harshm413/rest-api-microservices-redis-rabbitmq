@@ -1,4 +1,4 @@
-import type { AuthenticatedUser } from '@chatapp/common';
+import type { AuthenticatedUser } from '@rest-api/common';
 
 declare global {
   namespace Express {

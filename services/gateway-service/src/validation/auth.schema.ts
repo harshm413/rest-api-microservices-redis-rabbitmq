@@ -1,4 +1,4 @@
-import { z } from '@chatapp/common';
+import { z } from '@rest-api/common';
 
 export const registerSchema = z.object({
   email: z.string().email(),

@@ -17,6 +17,9 @@ COPY tsconfig.base.json tsconfig.json ./
 # Copy package/json file for all needed packages
 COPY packages/common/package.json ./packages/common/
 COPY services/auth-service/package.json ./services/auth-service/
+COPY services/user-service/package.json ./services/user-service/
+COPY services/chat-service/package.json ./services/chat-service/
+COPY services/gateway-service/package.json ./services/gateway-service/
 
 #Install Dependencies
 RUN pnpm install --frozen-lockfile
@@ -28,11 +31,14 @@ FROM deps AS builder
 COPY packages/common ./packages/common
 COPY services/auth-service ./services/auth-service
 
-#Build commong packge first
-RUN pnpm --filter @chatapp/common build
+# Reinstall to ensure proper workspace linking
+RUN pnpm install --frozen-lockfile
+
+#Build common package first
+RUN cd /app && pnpm --filter @rest-api/common build
 
 #Build auth-service
-RUN pnpm --filter @chatapp/auth-service build
+RUN cd /app && pnpm --filter @rest-api/auth-service build
 
 
 FROM node:22-alpine AS prodcution
@@ -53,6 +59,9 @@ COPY tsconfig.base.json ./
 # Copy package.json files
 COPY packages/common/package.json ./packages/common/
 COPY services/auth-service/package.json ./services/auth-service/
+COPY services/user-service/package.json ./services/user-service/
+COPY services/chat-service/package.json ./services/chat-service/
+COPY services/gateway-service/package.json ./services/gateway-service/
 
 
 # Install production dependencies only

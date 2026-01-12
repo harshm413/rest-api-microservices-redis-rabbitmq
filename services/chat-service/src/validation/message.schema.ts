@@ -1,4 +1,4 @@
-import { z } from '@chatapp/common';
+import { z } from '@rest-api/common';
 
 export const createMessageBodySchema = z.object({
   body: z.string().min(1).max(2000),

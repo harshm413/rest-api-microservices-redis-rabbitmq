@@ -1,4 +1,4 @@
-import { HttpError, type AuthenticatedUser } from '@chatapp/common';
+import { HttpError, type AuthenticatedUser } from '@rest-api/common';
 import jwt from 'jsonwebtoken';
 
 import type { RequestHandler } from 'express';

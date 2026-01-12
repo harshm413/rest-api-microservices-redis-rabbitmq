@@ -1,6 +1,6 @@
 import { login, refreshTokens, register, revokeRefreshToken } from '@/services/auth.service';
 import { LoginInput, RegisterInput } from '@/types/auth';
-import { asyncHandler, HttpError } from '@chatapp/common';
+import { asyncHandler, HttpError } from '@rest-api/common';
 import { RequestHandler } from 'express';
 
 export const registerHandler: RequestHandler = asyncHandler(async (req, res) => {

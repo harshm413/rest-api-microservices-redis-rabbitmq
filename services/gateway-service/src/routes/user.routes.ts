@@ -1,7 +1,7 @@
 import { createUser, getAllUsers, getUser, searchUsers } from '@/controllers/user.controller';
 import { requireAuth } from '@/middleware/require-auth';
 import { createUserSchema, searchUsersQuerySchema, userIdParamsSchema } from '@/validation/user.schema';
-import { asyncHandler, validateRequest } from '@chatapp/common';
+import { asyncHandler, validateRequest } from '@rest-api/common';
 import { Router } from 'express';
 
 export const userRouter: Router = Router();

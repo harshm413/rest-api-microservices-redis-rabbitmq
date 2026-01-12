@@ -1,7 +1,7 @@
 import { Op, type WhereOptions } from 'sequelize';
 
 import type { CreateUserInput, User } from '@/types/user';
-import type { AuthUserRegisteredPayload } from '@chatapp/common';
+import type { AuthUserRegisteredPayload } from '@rest-api/common';
 
 import { UserModel } from '@/db';
 

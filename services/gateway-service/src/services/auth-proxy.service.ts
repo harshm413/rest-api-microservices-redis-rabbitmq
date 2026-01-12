@@ -1,4 +1,4 @@
-import { HttpError } from '@chatapp/common';
+import { HttpError } from '@rest-api/common';
 import axios from 'axios';
 
 import { env } from '@/config/env';

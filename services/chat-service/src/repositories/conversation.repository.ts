@@ -51,7 +51,7 @@ export const conversationRepository = {
     const db = client.db();
     const doc = await db
       .collection(CONVERSATIONS_COLLECTION)
-      .findOne({ _id: id });
+      .findOne({ _id: id } as any);
     return doc ? toConversation(doc) : null;
   },
 
@@ -60,7 +60,7 @@ export const conversationRepository = {
     const db = client.db();
     const cursor = db
       .collection(CONVERSATIONS_COLLECTION)
-      .find({ participantIds: filter.participantId })
+      .find({ participantIds: filter.participantId } as any)
       .sort({ lastMessageAt: -1, updatedAt: -1 });
     const results = await cursor.toArray();
     return results.map((doc) => toConversationSummary(doc));
@@ -70,7 +70,7 @@ export const conversationRepository = {
     const client = await getMongoClient();
     const db = client.db();
     await db.collection(CONVERSATIONS_COLLECTION).updateOne(
-      { _id: conversationId },
+      { _id: conversationId } as any,
       {
         $set: {
           lastMessageAt: new Date(),

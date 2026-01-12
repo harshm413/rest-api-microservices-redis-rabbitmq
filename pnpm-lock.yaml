@@ -57,7 +57,7 @@ importers:
 
   services/auth-service:
     dependencies:
-      '@chatapp/common':
+      '@rest-api/common':
         specifier: workspace:^
         version: link:../../packages/common
       '@types/cors':
@@ -109,7 +109,7 @@ importers:
 
   services/chat-service:
     dependencies:
-      '@chatapp/common':
+      '@rest-api/common':
         specifier: workspace:^
         version: link:../../packages/common
       amqplib:
@@ -158,7 +158,7 @@ importers:
 
   services/gateway-service:
     dependencies:
-      '@chatapp/common':
+      '@rest-api/common':
         specifier: workspace:^
         version: link:../../packages/common
       axios:
@@ -201,7 +201,7 @@ importers:
 
   services/user-service:
     dependencies:
-      '@chatapp/common':
+      '@rest-api/common':
         specifier: workspace:^
         version: link:../../packages/common
       amqplib:

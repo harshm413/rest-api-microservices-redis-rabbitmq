@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { validateRequest } from '@chatapp/common';
+import { validateRequest } from '@rest-api/common';
 import {
   loginHandler,
   refreshHandler,

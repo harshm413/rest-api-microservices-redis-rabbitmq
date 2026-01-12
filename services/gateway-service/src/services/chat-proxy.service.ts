@@ -1,4 +1,4 @@
-import { HttpError, USER_ID_HEADER } from '@chatapp/common';
+import { HttpError, USER_ID_HEADER } from '@rest-api/common';
 import axios, { AxiosRequestConfig } from 'axios';
 
 import { env } from '@/config/env';

@@ -1,4 +1,4 @@
-import { z } from '@chatapp/common';
+import { z } from '@rest-api/common';
 
 export const createConversationSchema = z.object({
   title: z.string().min(1).max(200).optional(),
