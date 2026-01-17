@@ -39,7 +39,8 @@ kubectl version --client
 
 ```bash
 # Create cluster with 1 control-plane + 2 workers (simulating real EKS)
-k3d cluster create chatapp --servers 1 --agents 2 --port "8080:80@loadbalancer"
+# Traefik disabled to use NGINX Ingress instead
+k3d cluster create chatapp-dev --servers 1 --agents 2 --port "8888:80@loadbalancer" --api-port 6550 --k3s-arg "--disable=traefik@server:0"
 ```
 
 **✅ Verification:**
@@ -241,130 +242,26 @@ RUN cd /app && pnpm --filter @rest-api/common build
 RUN cd /app && pnpm --filter @rest-api/auth-service build
 ```
 
-### **Step 6: Create Environment-Specific ConfigMaps (Non-Sensitive Only)**
+### **Step 6: Create Environment-Specific ConfigMaps**
 
 ```bash
 # Create k8s directory structure
 mkdir -p k8s/dev k8s/staging k8s/prod
 
-# Create dev configmap YAML (non-sensitive config only)
-cat > k8s/dev/configmap.yaml << EOF
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: dev-config
-  namespace: dev
-data:
-  NODE_ENV: "development"
-  GATEWAY_PORT: "4000"
-  AUTH_SERVICE_PORT: "4003"
-  USER_SERVICE_PORT: "4001"
-  CHAT_SERVICE_PORT: "4002"
-  JWT_EXPIRES_IN: "1d"
-  JWT_REFRESH_EXPIRES_IN: "30d"
-  SERVICE_NAME: "microservices-dev"
-EOF
-
-# Create staging configmap YAML
-cat > k8s/staging/configmap.yaml << EOF
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: staging-config
-  namespace: staging
-data:
-  NODE_ENV: "staging"
-  GATEWAY_PORT: "4000"
-  AUTH_SERVICE_PORT: "4003"
-  USER_SERVICE_PORT: "4001"
-  CHAT_SERVICE_PORT: "4002"
-  JWT_EXPIRES_IN: "1d"
-  JWT_REFRESH_EXPIRES_IN: "30d"
-  SERVICE_NAME: "microservices-staging"
-EOF
-
-# Create prod configmap YAML
-cat > k8s/prod/configmap.yaml << EOF
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: prod-config
-  namespace: prod
-data:
-  NODE_ENV: "production"
-  GATEWAY_PORT: "4000"
-  AUTH_SERVICE_PORT: "4003"
-  USER_SERVICE_PORT: "4001"
-  CHAT_SERVICE_PORT: "4002"
-  JWT_EXPIRES_IN: "1d"
-  JWT_REFRESH_EXPIRES_IN: "30d"
-  SERVICE_NAME: "microservices-prod"
-EOF
+# Create ConfigMap YAML files in k8s/dev/, k8s/staging/, k8s/prod/
+# See k8s/dev/configmap.yaml for reference
 ```
 
-### **Step 7: Create Secrets (All Sensitive Data)**
+### **Step 7: Create Secrets**
 
 ```bash
-# Create dev secrets YAML (ALL sensitive data)
-cat > k8s/dev/secrets.yaml << EOF
-apiVersion: v1
-kind: Secret
-metadata:
-  name: dev-secrets
-  namespace: dev
-type: Opaque
-stringData:
-  JWT_SECRET: "dev_jwt_secret_key_here_32_chars_min"
-  JWT_REFRESH_SECRET: "dev_refresh_secret_key_here_32_chars"
-  INTERNAL_API_TOKEN: "dev_internal_api_token_here_secure"
-  AUTH_DB_URL: "mysql://auth_user:auth_pass@host.docker.internal:3301/auth_service"
-  USER_DB_URL: "postgres://user_user:user_pass@host.docker.internal:5431/user_service"
-  MONGO_URL: "mongodb://root:dev_pass@host.docker.internal:27016/chat_service?authSource=admin"
-  REDIS_URL: "redis://host.docker.internal:6378"
-  RABBITMQ_URL: "amqp://guest:guest@host.docker.internal:5671"
-EOF
-
-# Create staging secrets YAML
-cat > k8s/staging/secrets.yaml << EOF
-apiVersion: v1
-kind: Secret
-metadata:
-  name: staging-secrets
-  namespace: staging
-type: Opaque
-stringData:
-  JWT_SECRET: "staging_jwt_secret_key_here_32_chars_min"
-  JWT_REFRESH_SECRET: "staging_refresh_secret_key_here_32_chars"
-  INTERNAL_API_TOKEN: "staging_internal_api_token_here_secure"
-  AUTH_DB_URL: "mysql://auth_user:auth_pass@host.docker.internal:3302/auth_service"
-  USER_DB_URL: "postgres://user_user:user_pass@host.docker.internal:5432/user_service"
-  MONGO_URL: "mongodb://root:staging_pass@host.docker.internal:27017/chat_service?authSource=admin"
-  REDIS_URL: "redis://host.docker.internal:6379"
-  RABBITMQ_URL: "amqp://guest:guest@host.docker.internal:5672"
-EOF
-
-# Create prod secrets YAML
-cat > k8s/prod/secrets.yaml << EOF
-apiVersion: v1
-kind: Secret
-metadata:
-  name: prod-secrets
-  namespace: prod
-type: Opaque
-stringData:
-  JWT_SECRET: "prod_jwt_secret_key_here_32_chars_min_SECURE"
-  JWT_REFRESH_SECRET: "prod_refresh_secret_key_here_32_chars_SECURE"
-  INTERNAL_API_TOKEN: "prod_internal_api_token_here_VERY_SECURE"
-  AUTH_DB_URL: "mysql://auth_user:auth_pass@host.docker.internal:3303/auth_service"
-  USER_DB_URL: "postgres://user_user:user_pass@host.docker.internal:5433/user_service"
-  MONGO_URL: "mongodb://root:prod_pass@host.docker.internal:27018/chat_service?authSource=admin"
-  REDIS_URL: "redis://host.docker.internal:6380"
-  RABBITMQ_URL: "amqp://guest:guest@host.docker.internal:5673"
-EOF
+# Create Secrets YAML files in k8s/dev/, k8s/staging/, k8s/prod/
+# See k8s/dev/secrets.yaml for reference
+# Note: Use k3d gateway IP (172.19.0.1) for database URLs, not host.docker.internal
 ```
 
 **🔒 Security Note:**
-- **ConfigMaps:** Non-sensitive configuration only (ports, environment names)
+- **ConfigMaps:** Non-sensitive configuration only
 - **Secrets:** ALL sensitive data (passwords, tokens, connection URLs)
 - **YAML Files:** Version controlled, reviewable, GitOps compatible
 
@@ -391,57 +288,8 @@ kubectl get secrets -n dev
 ### **Step 9: Create Kubernetes Deployment Manifests**
 
 ```bash
-# Create auth service deployment YAML
-cat > k8s/dev/auth-deployment.yaml << EOF
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: auth-service
-  namespace: dev
-  labels:
-    app: auth-service
-    tier: backend
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: auth-service
-  template:
-    metadata:
-      labels:
-        app: auth-service
-        tier: backend
-    spec:
-      containers:
-      - name: auth-service
-        image: microservices/auth:dev
-        ports:
-        - containerPort: 4003
-        envFrom:
-        - configMapRef:
-            name: dev-config
-        - secretRef:
-            name: dev-secrets
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
-            memory: "256Mi"
-            cpu: "200m"
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 4003
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 4003
-          initialDelaySeconds: 5
-          periodSeconds: 5
-EOF
+# Create deployment YAML files in k8s/dev/
+# See k8s/dev/auth-deployment.yaml for reference
 ```
 
 **🏭 Enterprise Patterns Used:**
@@ -455,7 +303,7 @@ EOF
 
 ## 🚀 **Phase 4: Deploy to Dev Environment**
 
-### **Step 9: Apply Configuration & Deploy Services**
+### **Step 10: Apply Configuration & Deploy Services**
 
 ```bash
 # Apply dev environment configuration
@@ -466,6 +314,15 @@ kubectl apply -f k8s/dev/auth-deployment.yaml -f k8s/dev/auth-service.yaml
 kubectl apply -f k8s/dev/user-deployment.yaml -f k8s/dev/user-service.yaml
 kubectl apply -f k8s/dev/chat-deployment.yaml -f k8s/dev/chat-service.yaml
 kubectl apply -f k8s/dev/gateway-deployment.yaml -f k8s/dev/gateway-service.yaml
+
+# Install NGINX Ingress Controller
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.1/deploy/static/provider/cloud/deploy.yaml
+
+# Wait for Ingress Controller
+kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=120s
+
+# Apply Ingress resource
+kubectl apply -f k8s/dev/ingress.yaml
 ```
 
 ### **⚠️ Critical Kubernetes Deployment Fix**
@@ -490,11 +347,14 @@ containers:
   - containerPort: 4003
 ```
 
-### **Step 10: Monitor Deployment Status**
+### **Step 11: Monitor Deployment Status**
 
 ```bash
 # Check all pods status
 kubectl get pods -n dev
+
+# Check Ingress status
+kubectl get ingress -n dev
 
 # Expected healthy state:
 # NAME                              READY   STATUS    RESTARTS   AGE
@@ -541,15 +401,22 @@ k3d image import microservices/auth:dev -c chatapp
 
 ## 🧪 **Phase 5: Testing & Validation**
 
+### **Step 12: Configure Local DNS**
+
+```bash
+# Add to hosts file (Windows: C:\Windows\System32\drivers\etc\hosts)
+127.0.0.1 api.local
+```
+
 ### **Step 13: Test Dev Environment**
 
 ```bash
 # Check all pods are running
 kubectl get pods -n dev
 
-# Test API endpoints
-curl http://localhost:8080/health
-curl -X POST http://localhost:8080/auth/register -H "Content-Type: application/json" -d '{"email":"test@dev.com","displayName":"Dev User","password":"DevPass123!"}'
+# Test API endpoints via Ingress
+curl http://api.local:8888/health
+curl -X POST http://api.local:8888/auth/register -H "Content-Type: application/json" -d '{"email":"test@dev.com","displayName":"Dev User","password":"DevPass123!"}'
 
 # Check logs
 kubectl logs -n dev -l app=gateway-service
@@ -665,11 +532,12 @@ kubectl logs -n dev -f -l app=gateway-service
 
 ### **✅ Completed:**
 
-- [x] K3d cluster setup (3 nodes)
+- [x] K3d cluster setup (3 nodes, Traefik disabled)
 - [x] Environment namespaces (dev, staging, prod)
 - [x] External services deployment (MySQL, PostgreSQL, MongoDB, Redis, RabbitMQ)
 - [x] Docker images built with pnpm workspace fixes
 - [x] Kubernetes manifests created with proper image references
+- [x] NGINX Ingress Controller installed
 - [x] Dev environment deployed successfully
 - [x] Production-grade troubleshooting completed
 
@@ -678,15 +546,15 @@ kubectl logs -n dev -f -l app=gateway-service
 ```bash
 # Final pod status in dev namespace:
 NAME                              READY   STATUS    RESTARTS   AGE
-auth-service-xxx                  1/1     Running   10         15m
-user-service-xxx                  1/1     Running   10         12m
-gateway-service-xxx               1/1     Running   1          12m
+auth-service-xxx                  1/1     Running   0          15m
+user-service-xxx                  1/1     Running   0          12m
+gateway-service-xxx               1/1     Running   0          12m
 chat-service-xxx                  1/1     Running   0          2m
 ```
 
 **✅ Success Metrics:**
 - **4/4 services** running successfully
-- **Gateway accessible** at http://localhost:8080
+- **Gateway accessible** via Ingress at http://api.local:8888
 - **Database connections** established
 - **Zero-downtime deployment** achieved
 - **Production-ready patterns** implemented
@@ -698,6 +566,8 @@ chat-service-xxx                  1/1     Running   0          2m
 3. **Kubernetes anti-patterns** - Fixed by using pre-built images instead of runtime builds
 4. **MongoDB authentication** - Fixed by proper container initialization
 5. **Image availability** - Fixed by importing images into k3d cluster
+6. **Traefik port conflict** - Fixed by disabling Traefik and using NGINX Ingress
+7. **External access** - Fixed by implementing API Gateway pattern with Ingress
 
 ### **📚 Lessons Learned:**
 
@@ -706,6 +576,9 @@ chat-service-xxx                  1/1     Running   0          2m
 - **External services need proper initialization** - Especially authentication setup
 - **Production debugging requires systematic log analysis** - Not guesswork
 - **Real-world deployments rarely work perfectly first time** - Troubleshooting is key
+- **Traefik must be disabled in k3s** - To use NGINX Ingress Controller
+- **API Gateway pattern is essential** - Single entry point for all traffic
+- **Ingress provides production-grade routing** - Path-based, rate limiting, SSL/TLS
 
 ---
 

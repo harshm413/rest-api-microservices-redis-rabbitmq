@@ -1,8 +1,13 @@
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 
-// Load .env from project root
-dotenv.config({ path: path.resolve(process.cwd(), '../../.env') });
+// Load .env file only if it exists (for local development with pnpm dev)
+// Docker containers get environment variables directly from docker-compose
+const envPath = path.resolve(process.cwd(), '../../.env');
+if (fs.existsSync(envPath)) {
+  dotenv.config({ path: envPath, override: false });
+}
 
 import { createEnv, z } from '@rest-api/common';
 

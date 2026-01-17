@@ -1,7 +1,7 @@
 {
   "name": "rest-api-microservices-redis-rabbitmq",
   "version": "1.0.0",
-  "privayte": true,
+  "private": true,
   "description": "",
   "scripts": {
     "build": "pnpm -r --workspace-root=false run build",

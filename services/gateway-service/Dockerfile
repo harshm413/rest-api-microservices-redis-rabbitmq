@@ -41,7 +41,7 @@ RUN cd /app && pnpm --filter @rest-api/common build
 RUN cd /app && pnpm --filter gateway-service build
 
 
-FROM node:22-alpine AS prodcution
+FROM node:22-alpine AS production
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@10.14.0 --activate

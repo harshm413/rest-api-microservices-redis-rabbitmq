@@ -35,7 +35,11 @@ export const validateRequest = (schemas: RequestValidationSchemas) => {
 
       if (schemas.query) {
         const parsedQuery = schemas.query.parse(req.query) as QueryRecord;
-        req.query = parsedQuery as Request["query"];
+        Object.defineProperty(req, 'query', {
+          value: parsedQuery,
+          writable: true,
+          configurable: true
+        });
       }
 
       next();
