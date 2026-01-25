@@ -49,9 +49,7 @@ export const conversationRepository = {
   async findById(id: string): Promise<Conversation | null> {
     const client = await getMongoClient();
     const db = client.db();
-    const doc = await db
-      .collection(CONVERSATIONS_COLLECTION)
-      .findOne({ _id: id } as any);
+    const doc = await db.collection(CONVERSATIONS_COLLECTION).findOne({ _id: id } as any);
     return doc ? toConversation(doc) : null;
   },
 
@@ -69,16 +67,13 @@ export const conversationRepository = {
   async touchConversation(conversationId: string, preview: string): Promise<void> {
     const client = await getMongoClient();
     const db = client.db();
-    await db.collection(CONVERSATIONS_COLLECTION).updateOne(
-      { _id: conversationId } as any,
-      {
-        $set: {
-          lastMessageAt: new Date(),
-          lastMessagePreview: preview,
-          updatedAt: new Date(),
-        },
+    await db.collection(CONVERSATIONS_COLLECTION).updateOne({ _id: conversationId } as any, {
+      $set: {
+        lastMessageAt: new Date(),
+        lastMessagePreview: preview,
+        updatedAt: new Date(),
       },
-    );
+    });
   },
 
   async removeAll(): Promise<void> {

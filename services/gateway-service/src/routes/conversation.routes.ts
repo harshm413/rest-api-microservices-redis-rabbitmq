@@ -25,10 +25,7 @@ conversationRouter.post(
   createConversationHandler,
 );
 
-conversationRouter.get(
-  '/',
-  listConversationsHandler,
-);
+conversationRouter.get('/', listConversationsHandler);
 
 conversationRouter.get(
   '/:id',

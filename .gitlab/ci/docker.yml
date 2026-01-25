@@ -1,0 +1,95 @@
+# ============================================================================
+# Docker Stage - Build Container Images
+# ============================================================================
+# Uses host Docker socket for building (Docker-out-of-Docker pattern)
+# This is a common production pattern - more efficient than DinD
+# ============================================================================
+
+.docker_template:
+  stage: docker
+  image: docker:24-cli
+  before_script:
+    - export DOCKER_BUILDKIT=1
+    - docker info
+  needs:
+    - job: build:summary
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "non-prod-green" || $CI_COMMIT_BRANCH == "prod-green"
+  tags:
+    - docker
+
+# Build gateway image
+docker:gateway:
+  extends: .docker_template
+  script:
+    - echo "Building Gateway Service Docker image"
+    - |
+      docker build \
+        --tag gateway-service:$IMAGE_TAG \
+        --tag gateway-service:latest \
+        --file services/gateway-service/Dockerfile \
+        .
+    - echo "Gateway image built successfully"
+  needs:
+    - job: build:gateway
+
+# Build auth image
+docker:auth:
+  extends: .docker_template
+  script:
+    - echo "Building Auth Service Docker image"
+    - |
+      docker build \
+        --tag auth-service:$IMAGE_TAG \
+        --tag auth-service:latest \
+        --file services/auth-service/Dockerfile \
+        .
+    - echo "Auth image built successfully"
+  needs:
+    - job: build:auth
+
+# Build user image
+docker:user:
+  extends: .docker_template
+  script:
+    - echo "Building User Service Docker image"
+    - |
+      docker build \
+        --tag user-service:$IMAGE_TAG \
+        --tag user-service:latest \
+        --file services/user-service/Dockerfile \
+        .
+    - echo "User image built successfully"
+  needs:
+    - job: build:user
+
+# Build chat image
+docker:chat:
+  extends: .docker_template
+  script:
+    - echo "Building Chat Service Docker image"
+    - |
+      docker build \
+        --tag chat-service:$IMAGE_TAG \
+        --tag chat-service:latest \
+        --file services/chat-service/Dockerfile \
+        .
+    - echo "Chat image built successfully"
+  needs:
+    - job: build:chat
+
+# Docker summary
+docker:summary:
+  stage: docker
+  image: alpine:latest
+  script:
+    - echo "Docker build complete"
+    - echo "All images built with tag $IMAGE_TAG"
+    - echo "Images are available on host Docker"
+  needs:
+    - job: docker:gateway
+    - job: docker:auth
+    - job: docker:user
+    - job: docker:chat
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "non-prod-green" || $CI_COMMIT_BRANCH == "prod-green"

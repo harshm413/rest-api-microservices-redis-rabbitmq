@@ -1,8 +1,8 @@
-import { z } from "zod";
-import { HttpError } from "../errors/http-error";
+import { z } from 'zod';
+import { HttpError } from '../errors/http-error';
 
-import type { NextFunction, Request, Response } from "express";
-import { AnyZodObject, ZodError, ZodTypeAny } from "zod";
+import type { NextFunction, Request, Response } from 'express';
+import { AnyZodObject, ZodError, ZodTypeAny } from 'zod';
 
 type Schema = AnyZodObject | ZodTypeAny;
 type ParamsRecord = Record<string, string>;
@@ -16,7 +16,7 @@ export interface RequestValidationSchemas {
 
 const formatedError = (error: ZodError) =>
   error.errors.map((issue) => ({
-    path: issue.path.join("."),
+    path: issue.path.join('.'),
     message: issue.message,
   }));
 
@@ -30,7 +30,7 @@ export const validateRequest = (schemas: RequestValidationSchemas) => {
 
       if (schemas.params) {
         const parsedParams = schemas.params.parse(req.params) as ParamsRecord;
-        req.params = parsedParams as Request["params"];
+        req.params = parsedParams as Request['params'];
       }
 
       if (schemas.query) {
@@ -38,7 +38,7 @@ export const validateRequest = (schemas: RequestValidationSchemas) => {
         Object.defineProperty(req, 'query', {
           value: parsedQuery,
           writable: true,
-          configurable: true
+          configurable: true,
         });
       }
 
@@ -46,7 +46,7 @@ export const validateRequest = (schemas: RequestValidationSchemas) => {
     } catch (error) {
       if (error instanceof ZodError) {
         next(
-          new HttpError(422, "Validation Error", {
+          new HttpError(422, 'Validation Error', {
             issues: formatedError(error),
           }),
         );

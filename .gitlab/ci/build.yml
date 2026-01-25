@@ -1,0 +1,114 @@
+# ============================================================================
+# Build Stage - Compile TypeScript
+# ============================================================================
+
+.build_template:
+  stage: build
+  image: node:22-alpine
+  before_script:
+    - corepack enable
+    - corepack prepare pnpm@${PNPM_VERSION} --activate
+    - pnpm config set store-dir .pnpm-store
+    - pnpm install --frozen-lockfile
+  cache:
+    key:
+      files:
+        - pnpm-lock.yaml
+    paths:
+      - .pnpm-store
+      - node_modules/
+    policy: pull
+  needs:
+    - job: validate:summary
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "non-prod-green" || $CI_COMMIT_BRANCH == "prod-green"
+
+# Build common package
+build:common:
+  extends: .build_template
+  script:
+    - echo "Building common package"
+    - pnpm --filter @rest-api/common build
+  artifacts:
+    paths:
+      - packages/common/dist/
+    expire_in: 1 hour
+
+# Build gateway service
+build:gateway:
+  extends: .build_template
+  script:
+    - echo "Building gateway service"
+    - pnpm --filter @rest-api/common build
+    - pnpm --filter gateway-service build
+  artifacts:
+    paths:
+      - packages/common/dist/
+      - services/gateway-service/dist/
+    expire_in: 1 hour
+  needs:
+    - job: validate:summary
+    - job: build:common
+
+# Build auth service
+build:auth:
+  extends: .build_template
+  script:
+    - echo "Building auth service"
+    - pnpm --filter @rest-api/common build
+    - pnpm --filter @rest-api/auth-service build
+  artifacts:
+    paths:
+      - packages/common/dist/
+      - services/auth-service/dist/
+    expire_in: 1 hour
+  needs:
+    - job: validate:summary
+    - job: build:common
+
+# Build user service
+build:user:
+  extends: .build_template
+  script:
+    - echo "Building user service"
+    - pnpm --filter @rest-api/common build
+    - pnpm --filter @rest-api/user-service build
+  artifacts:
+    paths:
+      - packages/common/dist/
+      - services/user-service/dist/
+    expire_in: 1 hour
+  needs:
+    - job: validate:summary
+    - job: build:common
+
+# Build chat service
+build:chat:
+  extends: .build_template
+  script:
+    - echo "Building chat service"
+    - pnpm --filter @rest-api/common build
+    - pnpm --filter chat-service build
+  artifacts:
+    paths:
+      - packages/common/dist/
+      - services/chat-service/dist/
+    expire_in: 1 hour
+  needs:
+    - job: validate:summary
+    - job: build:common
+
+# Build summary
+build:summary:
+  stage: build
+  image: alpine:latest
+  script:
+    - echo "Build complete"
+    - echo "All services compiled successfully"
+  needs:
+    - job: build:gateway
+    - job: build:auth
+    - job: build:user
+    - job: build:chat
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "non-prod-green" || $CI_COMMIT_BRANCH == "prod-green"

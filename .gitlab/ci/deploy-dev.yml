@@ -1,0 +1,148 @@
+# ============================================================================
+# Deploy to Development Environment
+# ============================================================================
+# Real K8s deployment - automated import and deployment
+# ============================================================================
+
+.deploy_dev_template:
+  stage: deploy
+  image: docker:24-cli
+  before_script:
+    - apk add --no-cache curl
+    - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    - chmod +x kubectl
+    - mv kubectl /usr/local/bin/
+    - kubectl version --client
+    # Configure kubectl to connect to K3d cluster on host
+    - mkdir -p ~/.kube
+    - |
+      # Get kubeconfig from K3d and modify server URL for container access
+      docker exec k3d-chatapp-dev-server-0 cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config
+      echo "Original kubeconfig:"
+      cat ~/.kube/config | grep server:
+      # Replace server URL to use host.docker.internal
+      sed -i 's|https://0.0.0.0:6443|https://host.docker.internal:6550|g' ~/.kube/config
+      sed -i 's|https://127.0.0.1:6443|https://host.docker.internal:6550|g' ~/.kube/config
+      echo "Modified kubeconfig:"
+      cat ~/.kube/config | grep server:
+    - kubectl cluster-info
+  needs:
+    - job: docker:summary
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev"
+  tags:
+    - docker
+
+# Import images into K3d and deploy
+deploy:dev:import:
+  extends: .deploy_dev_template
+  script:
+    - echo "Importing Docker images into K3d cluster (all nodes)"
+    - |
+      # Import to all K3d nodes
+      for node in k3d-chatapp-dev-server-0 k3d-chatapp-dev-agent-0 k3d-chatapp-dev-agent-1; do
+        echo "Importing to $node..."
+        docker save gateway-service:$IMAGE_TAG | docker exec -i $node ctr images import -
+        docker save auth-service:$IMAGE_TAG | docker exec -i $node ctr images import -
+        docker save user-service:$IMAGE_TAG | docker exec -i $node ctr images import -
+        docker save chat-service:$IMAGE_TAG | docker exec -i $node ctr images import -
+      done
+    - echo "Images imported successfully to all nodes"
+
+# Deploy Gateway Service
+deploy:dev:gateway:
+  extends: .deploy_dev_template
+  script:
+    - echo "Deploying Gateway Service to dev"
+    - kubectl set image deployment/gateway-service gateway-service=gateway-service:$IMAGE_TAG -n dev
+    - kubectl rollout status deployment/gateway-service -n dev --timeout=5m
+    - echo "Gateway deployed successfully"
+  needs:
+    - job: deploy:dev:import
+
+# Deploy Auth Service
+deploy:dev:auth:
+  extends: .deploy_dev_template
+  script:
+    - echo "Deploying Auth Service to dev"
+    - kubectl set image deployment/auth-service auth-service=auth-service:$IMAGE_TAG -n dev
+    - kubectl rollout status deployment/auth-service -n dev --timeout=5m
+    - echo "Auth deployed successfully"
+  needs:
+    - job: deploy:dev:import
+
+# Deploy User Service
+deploy:dev:user:
+  extends: .deploy_dev_template
+  script:
+    - echo "Deploying User Service to dev"
+    - kubectl set image deployment/user-service user-service=user-service:$IMAGE_TAG -n dev
+    - kubectl rollout status deployment/user-service -n dev --timeout=5m
+    - echo "User deployed successfully"
+  needs:
+    - job: deploy:dev:import
+
+# Deploy Chat Service
+deploy:dev:chat:
+  extends: .deploy_dev_template
+  script:
+    - echo "Deploying Chat Service to dev"
+    - kubectl set image deployment/chat-service chat-service=chat-service:$IMAGE_TAG -n dev
+    - kubectl rollout status deployment/chat-service -n dev --timeout=5m
+    - echo "Chat deployed successfully"
+  needs:
+    - job: deploy:dev:import
+
+# Health Check
+healthcheck:dev:
+  stage: deploy
+  image: docker:24-cli
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - echo "Running health checks on dev environment"
+    - echo "Waiting for services to stabilize..."
+    - sleep 30
+    - echo "Checking gateway service health via K3d load balancer"
+    - |
+      # Retry health check up to 5 times with correct Host header
+      for i in 1 2 3 4 5; do
+        echo "Health check attempt $i/5..."
+        if curl -f -H "Host: api.local" http://host.docker.internal:8888/health; then
+          echo "Health check passed!"
+          exit 0
+        fi
+        echo "Attempt $i failed, waiting 10 seconds..."
+        sleep 10
+      done
+      echo "Health check failed after 5 attempts"
+      exit 1
+  needs:
+    - job: deploy:dev:gateway
+    - job: deploy:dev:auth
+    - job: deploy:dev:user
+    - job: deploy:dev:chat
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev"
+
+# Deployment Summary
+deploy:dev:summary:
+  stage: deploy
+  image: alpine:latest
+  script:
+    - echo "==================================="
+    - echo "Deployment Complete"
+    - echo "==================================="
+    - echo ""
+    - echo "Environment dev"
+    - echo "Namespace dev"
+    - echo "Image Tag $IMAGE_TAG"
+    - echo "Commit $CI_COMMIT_SHORT_SHA"
+    - echo "Branch $CI_COMMIT_BRANCH"
+    - echo ""
+    - echo "All services deployed and healthy"
+    - echo "Application accessible at http://api.local:8888"
+  needs:
+    - job: healthcheck:dev
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev"

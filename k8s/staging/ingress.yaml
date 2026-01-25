@@ -1,0 +1,58 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-ingress
+  namespace: staging
+  annotations:
+    # SSL/TLS (disabled for local dev, enable in production)
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    
+    # Rate limiting - 100 requests per second per IP
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+    nginx.ingress.kubernetes.io/limit-burst-multiplier: "2"
+    
+    # CORS configuration
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Authorization, Content-Type, X-Request-ID"
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+    nginx.ingress.kubernetes.io/cors-max-age: "3600"
+    
+    # Timeouts
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "30"
+    
+    # Request size limit (10MB for file uploads)
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    
+    # Custom headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header X-Request-ID $request_id;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+    
+    # Response headers
+    nginx.ingress.kubernetes.io/server-snippet: |
+      add_header X-Powered-By "Microservices Platform" always;
+      add_header X-Frame-Options "SAMEORIGIN" always;
+      add_header X-Content-Type-Options "nosniff" always;
+      add_header X-XSS-Protection "1; mode=block" always;
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: api-staging.local
+    http:
+      paths:
+      
+      # All traffic goes through Gateway (API Gateway pattern)
+      # Gateway handles routing to backend services with internal auth
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: gateway-service
+            port:
+              number: 4000

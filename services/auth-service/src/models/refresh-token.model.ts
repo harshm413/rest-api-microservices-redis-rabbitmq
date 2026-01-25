@@ -1,6 +1,6 @@
-import { DataTypes, Model, type Optional } from "sequelize";
-import { sequelize } from "@/db/sequelize";
-import { UserCredentials } from "@/models/user-credentials.model";
+import { DataTypes, Model, type Optional } from 'sequelize';
+import { sequelize } from '@/db/sequelize';
+import { UserCredentials } from '@/models/user-credentials.model';
 
 export interface RefreshTokenAttributes {
   id: string;
@@ -13,7 +13,7 @@ export interface RefreshTokenAttributes {
 
 export type RefreshTokenCreationAttributes = Optional<
   RefreshTokenAttributes,
-  "id" | "createdAt" | "updatedAt"
+  'id' | 'createdAt' | 'updatedAt'
 >;
 
 export class RefreshToken
@@ -60,17 +60,17 @@ RefreshToken.init(
   },
   {
     sequelize,
-    tableName: "refresh_tokens",
+    tableName: 'refresh_tokens',
   },
 );
 
 UserCredentials.hasMany(RefreshToken, {
-  foreignKey: "userId",
-  as: "refreshTokens",
-  onDelete: "CASCADE",
+  foreignKey: 'userId',
+  as: 'refreshTokens',
+  onDelete: 'CASCADE',
 });
 
 RefreshToken.belongsTo(UserCredentials, {
-  foreignKey: "userId",
-  as: "user",
+  foreignKey: 'userId',
+  as: 'user',
 });

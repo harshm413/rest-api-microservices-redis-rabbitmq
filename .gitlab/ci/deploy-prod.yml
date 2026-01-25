@@ -1,0 +1,127 @@
+# ============================================================================
+# Deploy to Production Environment
+# ============================================================================
+# Deploys when code is merged to prod-green branch (MANUAL APPROVAL REQUIRED)
+# ============================================================================
+
+.deploy_prod_template:
+  stage: deploy
+  image: docker:24-cli
+  before_script:
+    - apk add --no-cache curl
+    - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    - chmod +x kubectl
+    - mv kubectl /usr/local/bin/
+    - kubectl version --client
+    # Configure kubectl
+    - mkdir -p ~/.kube
+    - |
+      docker exec k3d-chatapp-dev-server-0 cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config
+      sed -i 's|https://0.0.0.0:6443|https://host.docker.internal:6550|g' ~/.kube/config
+      sed -i 's|https://127.0.0.1:6443|https://host.docker.internal:6550|g' ~/.kube/config
+    - kubectl cluster-info
+  needs:
+    - job: docker:summary
+  rules:
+    - if: $CI_COMMIT_BRANCH == "prod-green"
+      when: manual  # REQUIRES MANUAL APPROVAL
+  tags:
+    - docker
+
+# Import images to K3d
+deploy:prod:import:
+  extends: .deploy_prod_template
+  script:
+    - echo "Importing Docker images into K3d cluster (all nodes)"
+    - |
+      for node in k3d-chatapp-dev-server-0 k3d-chatapp-dev-agent-0 k3d-chatapp-dev-agent-1; do
+        echo "Importing to $node..."
+        docker save gateway-service:$IMAGE_TAG | docker exec -i $node ctr images import -
+        docker save auth-service:$IMAGE_TAG | docker exec -i $node ctr images import -
+        docker save user-service:$IMAGE_TAG | docker exec -i $node ctr images import -
+        docker save chat-service:$IMAGE_TAG | docker exec -i $node ctr images import -
+      done
+    - echo "Images imported successfully to all nodes"
+
+# Deploy services
+deploy:prod:gateway:
+  extends: .deploy_prod_template
+  script:
+    - echo "Deploying Gateway Service to production"
+    - kubectl set image deployment/gateway-service gateway-service=gateway-service:$IMAGE_TAG -n prod
+    - kubectl rollout status deployment/gateway-service -n prod --timeout=5m
+  needs:
+    - job: deploy:prod:import
+
+deploy:prod:auth:
+  extends: .deploy_prod_template
+  script:
+    - echo "Deploying Auth Service to production"
+    - kubectl set image deployment/auth-service auth-service=auth-service:$IMAGE_TAG -n prod
+    - kubectl rollout status deployment/auth-service -n prod --timeout=5m
+  needs:
+    - job: deploy:prod:import
+
+deploy:prod:user:
+  extends: .deploy_prod_template
+  script:
+    - echo "Deploying User Service to production"
+    - kubectl set image deployment/user-service user-service=user-service:$IMAGE_TAG -n prod
+    - kubectl rollout status deployment/user-service -n prod --timeout=5m
+  needs:
+    - job: deploy:prod:import
+
+deploy:prod:chat:
+  extends: .deploy_prod_template
+  script:
+    - echo "Deploying Chat Service to production"
+    - kubectl set image deployment/chat-service chat-service=chat-service:$IMAGE_TAG -n prod
+    - kubectl rollout status deployment/chat-service -n prod --timeout=5m
+  needs:
+    - job: deploy:prod:import
+
+# Health Check
+healthcheck:prod:
+  stage: deploy
+  image: docker:24-cli
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - echo "Running health checks on production environment"
+    - sleep 30
+    - |
+      for i in 1 2 3 4 5; do
+        echo "Health check attempt $i/5..."
+        if curl -f -H "Host: api-prod.local" http://host.docker.internal:8888/health; then
+          echo "Health check passed!"
+          exit 0
+        fi
+        sleep 10
+      done
+      exit 1
+  needs:
+    - job: deploy:prod:gateway
+    - job: deploy:prod:auth
+    - job: deploy:prod:user
+    - job: deploy:prod:chat
+  rules:
+    - if: $CI_COMMIT_BRANCH == "prod-green"
+
+# Summary
+deploy:prod:summary:
+  stage: deploy
+  image: alpine:latest
+  script:
+    - echo "==================================="
+    - echo "PRODUCTION Deployment Complete"
+    - echo "==================================="
+    - echo "Environment production"
+    - echo "Namespace prod"
+    - echo "Image Tag $IMAGE_TAG"
+    - echo "Commit $CI_COMMIT_SHORT_SHA"
+    - echo "Branch $CI_COMMIT_BRANCH"
+    - echo "Application accessible at http://api-prod.local:8888"
+  needs:
+    - job: healthcheck:prod
+  rules:
+    - if: $CI_COMMIT_BRANCH == "prod-green"

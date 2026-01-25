@@ -24,10 +24,7 @@ conversationRouter.post(
   validateRequest({ body: createConversationSchema }),
   createConversationHandler,
 );
-conversationRouter.get(
-  '/',
-  listConversationHandler,
-);
+conversationRouter.get('/', listConversationHandler);
 conversationRouter.get(
   '/:id',
   validateRequest({ params: conversationIdParamsSchema }),

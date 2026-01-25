@@ -1,0 +1,72 @@
+# ============================================================================
+# GitLab CI/CD Pipeline - Learning-Friendly Professional Setup
+# ============================================================================
+# 
+# Simplified pipeline for learning CI/CD concepts:
+# 1. validate  - Code quality checks
+# 2. build     - Compile TypeScript
+# 3. docker    - Build Docker images
+# 4. deploy    - Deploy to dev environment
+#
+# ============================================================================
+
+# Global variables
+variables:
+  AUTO_DEVOPS_EXPLICITLY_ENABLED: "false"
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
+  DOCKER_BUILDKIT: "1"
+  
+  # Use local GitLab registry
+  CI_REGISTRY: localhost:19080
+  CI_REGISTRY_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH
+  
+  IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+  KUBE_NAMESPACE_DEV: dev
+  NODE_ENV: production
+  PNPM_VERSION: "10.14.0"
+
+# Pipeline stages
+stages:
+  - validate
+  - build
+  - docker
+  - deploy
+
+# Include stage configurations
+include:
+  - local: '.gitlab/ci/validate.yml'
+  - local: '.gitlab/ci/build.yml'
+  - local: '.gitlab/ci/docker.yml'
+  - local: '.gitlab/ci/deploy-dev.yml'
+  - local: '.gitlab/ci/deploy-staging.yml'
+  - local: '.gitlab/ci/deploy-prod.yml'
+
+# Default job configuration
+default:
+  retry:
+    max: 1
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+  timeout: 20m
+  interruptible: true
+
+# Cache for faster builds
+cache:
+  key:
+    files:
+      - pnpm-lock.yaml
+  paths:
+    - .pnpm-store
+    - node_modules/
+  policy: pull-push
+
+# When to run pipeline
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev"
+    - if: $CI_COMMIT_BRANCH == "non-prod-green"
+    - if: $CI_COMMIT_BRANCH == "prod-green"
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - when: never

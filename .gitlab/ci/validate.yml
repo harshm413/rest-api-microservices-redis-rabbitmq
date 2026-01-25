@@ -1,0 +1,40 @@
+# ============================================================================
+# Validation Stage - Code Quality Checks
+# ============================================================================
+
+.validate_template:
+  stage: validate
+  image: node:22-alpine
+  before_script:
+    - corepack enable
+    - corepack prepare pnpm@${PNPM_VERSION} --activate
+    - pnpm config set store-dir .pnpm-store
+    - pnpm install --frozen-lockfile
+  cache:
+    key:
+      files:
+        - pnpm-lock.yaml
+    paths:
+      - .pnpm-store
+      - node_modules/
+    policy: pull-push
+
+# Check code formatting
+format:
+  extends: .validate_template
+  script:
+    - echo "Checking code formatting"
+    - pnpm format
+  allow_failure: false
+
+# Validation summary
+validate:summary:
+  stage: validate
+  image: alpine:latest
+  script:
+    - echo "Validation complete"
+    - echo "Commit $CI_COMMIT_SHORT_SHA"
+    - echo "Branch $CI_COMMIT_BRANCH"
+    - echo "Format check passed"
+  needs:
+    - job: format
